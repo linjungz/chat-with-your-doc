@@ -1,0 +1,101 @@
+import os
+import openai
+from dotenv import load_dotenv
+from langchain.chat_models import AzureChatOpenAI
+from langchain.embeddings import OpenAIEmbeddings
+
+from langchain.vectorstores import FAISS
+from langchain.chains import ConversationalRetrievalChain
+from langchain.prompts import PromptTemplate
+
+from langchain.document_loaders import (UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, PyPDFLoader)
+import glob
+import langchain.text_splitter as text_splitter
+from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTextSplitter)
+
+class DocChatbot:
+    llm: AzureChatOpenAI
+    embeddings: OpenAIEmbeddings
+    vector_db: FAISS
+    chatchain: ConversationalRetrievalChain
+
+    def __init__(self) -> None:
+        #init for OpenAI GPT-4 and Embeddings
+        load_dotenv()
+        openai.api_type = "azure"
+        openai.api_version = "2023-03-15-preview"
+        openai.api_base = os.getenv("OPENAI_API_BASE")
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+
+        self.llm = AzureChatOpenAI(
+            deployment_name="gpt-4",
+            temperature=0,
+            openai_api_version="2023-03-15-preview"
+        )
+
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", chunk_size=1)
+
+        # load vector db
+        self.load_vector_db_from_local("./data/vector_store", "index")
+
+        # init for ConversationalRetrievalChain
+        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question.
+            Chat History:
+            {chat_history}
+
+            Follow Up Input:
+            {question}
+
+            Standalone Question:"""
+            )
+                                                                    
+            # vectordbkwargs = {"search_distance": 0.5}
+        self.chatchain = ConversationalRetrievalChain.from_llm(llm=self.llm, 
+                                                retriever=self.vector_db.as_retriever(),
+                                                condense_question_prompt=CONDENSE_QUESTION_PROMPT,
+                                                return_source_documents=True,
+                                                verbose=True)
+
+    # get answer from query, return answer and source documents
+    def get_answer_with_source(self, query, chat_history):
+        result = self.chatchain({
+                "question": query,
+                "chat_history": chat_history
+        })
+        
+        return result['answer'], result['source_documents']
+
+    # load vector db from local
+    def load_vector_db_from_local(self, path: str, index_name: str):
+        self.vector_db = FAISS.load_local(path, self.embeddings, index_name)
+        print("Loaded vector db from local")
+
+    # save vector db to local
+    def save_vector_db_to_local(self, path: str, index_name: str):
+        FAISS.save_local(self.vector_db, path, index_name)
+        print("Vector db saved to local")
+
+
+    # split documents, generate embeddings and ingest to vector db
+    def init_vector_db_from_documents(self, source_documents_path):
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        files = glob.glob(source_documents_path)
+
+        docs = []
+        for file in files:
+            if file.lower().endswith(".pptx"):
+                loader = UnstructuredPowerPointLoader(file)
+            elif file.lower().endswith(".docx"):
+                loader = UnstructuredWordDocumentLoader(file)
+            elif file.lower().endswith(".pdf"):
+                loader = PyPDFLoader(file)
+
+            doc = loader.load_and_split(text_splitter)            
+            docs.extend(doc)
+            print("Processed document: " + file)
+    
+        self.db = FAISS.from_documents(docs, OpenAIEmbeddings(chunk_size=1))
+        print("Generated embeddings and ingested to vector db.")
+
+
+        
