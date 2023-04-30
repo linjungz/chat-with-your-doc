@@ -6,6 +6,7 @@ from langchain.embeddings import OpenAIEmbeddings
 
 from langchain.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
+from langchain.chains.conversational_retrieval.base import BaseConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 
 from langchain.document_loaders import (UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, PyPDFLoader)
@@ -17,7 +18,7 @@ class DocChatbot:
     llm: AzureChatOpenAI
     embeddings: OpenAIEmbeddings
     vector_db: FAISS
-    chatchain: ConversationalRetrievalChain
+    chatchain: BaseConversationalRetrievalChain
 
     def __init__(self) -> None:
         #init for OpenAI GPT-4 and Embeddings
@@ -34,10 +35,8 @@ class DocChatbot:
         )
 
         self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", chunk_size=1)
-
-        # load vector db
-        self.load_vector_db_from_local("./data/vector_store", "index")
-
+        
+    def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
         CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question.
             Chat History:
@@ -49,19 +48,22 @@ class DocChatbot:
             Standalone Question:"""
             )
                                                                     
-            # vectordbkwargs = {"search_distance": 0.5}
+        # stuff chain_type seems working better than others
         self.chatchain = ConversationalRetrievalChain.from_llm(llm=self.llm, 
                                                 retriever=self.vector_db.as_retriever(),
                                                 condense_question_prompt=CONDENSE_QUESTION_PROMPT,
+                                                chain_type=chain_type,
                                                 return_source_documents=True,
                                                 verbose=True)
+                                                # combine_docs_chain_kwargs=dict(return_map_steps=False))
 
     # get answer from query, return answer and source documents
     def get_answer_with_source(self, query, chat_history):
         result = self.chatchain({
                 "question": query,
                 "chat_history": chat_history
-        })
+        },
+        return_only_outputs=True)
         
         return result['answer'], result['source_documents']
 
@@ -94,7 +96,7 @@ class DocChatbot:
             docs.extend(doc)
             print("Processed document: " + file)
     
-        self.db = FAISS.from_documents(docs, OpenAIEmbeddings(chunk_size=1))
+        self.vector_db = FAISS.from_documents(docs, OpenAIEmbeddings(chunk_size=1))
         print("Generated embeddings and ingested to vector db.")
 
 
