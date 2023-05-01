@@ -9,7 +9,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.conversational_retrieval.base import BaseConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 
-from langchain.document_loaders import (UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, PyPDFLoader)
+from langchain.document_loaders import (UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, PyPDFLoader, UnstructuredFileLoader)
 import glob
 import langchain.text_splitter as text_splitter
 from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTextSplitter)
@@ -91,6 +91,9 @@ class DocChatbot:
                 loader = UnstructuredWordDocumentLoader(file)
             elif file.lower().endswith(".pdf"):
                 loader = PyPDFLoader(file)
+            else:
+                # process .txt, .html
+                loader = UnstructuredFileLoader(file)
 
             doc = loader.load_and_split(text_splitter)            
             docs.extend(doc)
