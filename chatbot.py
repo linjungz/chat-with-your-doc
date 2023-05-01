@@ -70,7 +70,7 @@ class DocChatbot:
     # load vector db from local
     def load_vector_db_from_local(self, path: str, index_name: str):
         self.vector_db = FAISS.load_local(path, self.embeddings, index_name)
-        print("Loaded vector db from local")
+        print(f"Loaded vector db from local: {path}/{index_name}")
 
     # save vector db to local
     def save_vector_db_to_local(self, path: str, index_name: str):
