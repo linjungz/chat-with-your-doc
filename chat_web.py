@@ -64,6 +64,8 @@ def ingest_docs_to_vector_store(vs_name, files, vs_list):
         log(f"Knowledge base name {vs_name} already exists, please choose another name.")
     else:
         docChatbot.init_vector_db_from_documents(file_list)
+        docChatbot.save_vector_db_to_local(VS_ROOT_PATH, vs_name)
+        docChatbot.init_chatchain()
         return gr.update(choices=vs_list+[vs_name], value=vs_name), vs_list + [vs_name]
 
 
@@ -145,6 +147,7 @@ with gr.Blocks(css=block_css) as demo:
                 with vs_setting_switch:
                     select_vs = gr.Dropdown(vs_list.value,
                                             interactive=True,
+                                            show_label=False,
                                             value=vs_list.value[0] if len(vs_list.value) > 0 else None
                                             )
 

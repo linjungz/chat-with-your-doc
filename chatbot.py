@@ -87,6 +87,7 @@ class DocChatbot:
         for file in file_list:
             print(f"Loading file: {file}")
             ext_name = os.path.splitext(file)[1]
+            # print(ext_name)
 
             if ext_name == ".pptx":
                 loader = UnstructuredPowerPointLoader(file)
