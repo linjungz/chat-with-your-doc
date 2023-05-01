@@ -20,7 +20,7 @@ webui_title = """
 init_message = """你好，我可以根据已有的知识库回答相关问题."""
 
 VS_ROOT_PATH = "./data/vector_store"
-docChatbot = DocChatbot()
+
 
 def log(msg: str):
     status.value = msg
@@ -36,11 +36,9 @@ def get_vs_list():
 
     return index_list
 
-vs_list = get_vs_list()
-
 def select_vs_on_change(vs_id):
     switch_kb(vs_id)
-    return f"Swithced to knowledge base: {vs_id}", ""
+    return f"Swithed to knowledge base: {vs_id}",  [[None, init_message]]
 
 def switch_kb(index: str):
     docChatbot.load_vector_db_from_local(VS_ROOT_PATH, index)
@@ -89,9 +87,14 @@ def get_answer(message, chat_history):
     chat_history.append((message, result_answer))
     return "", chat_history
 
+# Init for web ui
+docChatbot = DocChatbot()
+vector_stores_list = get_vs_list()
+
 with gr.Blocks(css=block_css) as demo:
-    vs_list = gr.State(vs_list)
-    vs_path = gr.State("")
+    vs_list = gr.State(value=vector_stores_list)
+    vs_path = gr.State(value="")
+
     gr.Markdown(webui_title)
 
     with gr.Tab("Chat"):
@@ -112,8 +115,6 @@ with gr.Blocks(css=block_css) as demo:
                     [query,chatbot],
                     [query,chatbot]
                 )
-
-                
 
             with gr.Column(scale=5):
                 vs_setting = gr.Accordion("Configure Knowledge Base")
