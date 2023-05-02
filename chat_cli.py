@@ -1,5 +1,9 @@
 from chatbot import DocChatbot
 import typer
+from typing_extensions import Annotated
+
+import glob
+
 
 
 VECTORDB_PATH = "./data/vector_store"
@@ -7,8 +11,14 @@ app = typer.Typer()
 docChatbot = DocChatbot()
 
 @app.command()
-def ingest(doc_path: str, index_name : str):
-    docChatbot.init_vector_db_from_documents(doc_path)
+def ingest(
+        doc_path : Annotated[str, typer.Argument(help="Path to the documents to be ingested, support glob pattern", show_default=False)],
+        index_name : Annotated[str, typer.Argument(help="Name of the index to be created")]):
+    #support for glob in doc_path
+    file_list = glob.glob(doc_path)
+    # print(file_list)
+    
+    docChatbot.init_vector_db_from_documents(file_list)
     docChatbot.save_vector_db_to_local(VECTORDB_PATH, index_name)
 
 @app.command()

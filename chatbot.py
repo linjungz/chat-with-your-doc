@@ -10,9 +10,10 @@ from langchain.chains.conversational_retrieval.base import BaseConversationalRet
 from langchain.prompts import PromptTemplate
 
 from langchain.document_loaders import (UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, PyPDFLoader, UnstructuredFileLoader)
-import glob
 import langchain.text_splitter as text_splitter
 from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTextSplitter)
+
+from typing import List
 
 class DocChatbot:
     llm: AzureChatOpenAI
@@ -79,17 +80,19 @@ class DocChatbot:
 
 
     # split documents, generate embeddings and ingest to vector db
-    def init_vector_db_from_documents(self, source_documents_path):
+    def init_vector_db_from_documents(self, file_list: List[str]):
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        files = glob.glob(source_documents_path)
 
         docs = []
-        for file in files:
-            if file.lower().endswith(".pptx"):
+        for file in file_list:
+            print(f"Loading file: {file}")
+            ext_name = os.path.splitext(file)[1]
+
+            if ext_name == ".pptx":
                 loader = UnstructuredPowerPointLoader(file)
-            elif file.lower().endswith(".docx"):
+            elif ext_name == ".docx":
                 loader = UnstructuredWordDocumentLoader(file)
-            elif file.lower().endswith(".pdf"):
+            elif ext_name == ".pdf":
                 loader = PyPDFLoader(file)
             else:
                 # process .txt, .html
