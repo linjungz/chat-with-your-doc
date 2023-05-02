@@ -22,10 +22,6 @@ init_message = """Hello!"""
 VS_ROOT_PATH = "./data/vector_store"
 UPLOAD_ROOT_PATH = "./data/source_documents/"
 
-
-def log(msg: str):
-    status.value = msg
-
 def get_vs_list():
     if not os.path.exists(VS_ROOT_PATH):
         return []
@@ -39,15 +35,19 @@ def get_vs_list():
 
 def select_vs_on_change(vs_id):
     switch_kb(vs_id)
-    return f"Swithed to knowledge base: {vs_id}",  [[None, init_message]]
+    return f"Swithed to knowledge base: {vs_id} and you may start a chat.",  [[None, init_message]]
 
 def switch_kb(index: str):
     docChatbot.load_vector_db_from_local(VS_ROOT_PATH, index)
     docChatbot.init_chatchain()
 
-def ingest_docs_to_vector_store(vs_name, files, vs_list):
+def ingest_docs_to_vector_store(vs_name, files, vs_list, select_vs):
     # print(vs_name)
     # print(files)
+
+    # Check if vs_name already exists
+    if vs_name in vs_list:
+        return f"ERROR: Failed to create knowledge base.", gr.update(visible=True), vs_list, select_vs, gr.update(value="", placeholder=f"Index name {vs_name} already exits.")
 
     file_list = []
     if files is not []:
@@ -55,50 +55,13 @@ def ingest_docs_to_vector_store(vs_name, files, vs_list):
             filename = os.path.split(file.name)[-1]
             shutil.move(file.name, UPLOAD_ROOT_PATH + filename)
             file_list.append(UPLOAD_ROOT_PATH + filename)
-        log("Documents uploaded.")
 
     
-    # Check if vs_name already exists
     # create new kb and ingest data to vector store   
-    if vs_name in vs_list:
-        log(f"Knowledge base name {vs_name} already exists, please choose another name.")
-    else:
-        docChatbot.init_vector_db_from_documents(file_list)
-        docChatbot.save_vector_db_to_local(VS_ROOT_PATH, vs_name)
-        docChatbot.init_chatchain()
-        return gr.update(choices=vs_list+[vs_name], value=vs_name), vs_list + [vs_name]
-
-
-
-
-# def get_vector_store(vs_id, files, history):
-#     vs_path = VS_ROOT_PATH + vs_id
-#     filelist = []
-#     for file in files:
-#         filename = os.path.split(file.name)[-1]
-#         shutil.move(file.name, UPLOAD_ROOT_PATH + filename)
-#         filelist.append(UPLOAD_ROOT_PATH + filename)
-#     if local_doc_qa.llm and local_doc_qa.embeddings:
-#         vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
-#         if len(loaded_files):
-#             file_status = f"已上传 {'、'.join([os.path.split(i)[-1] for i in loaded_files])} 至知识库，并已加载知识库，请开始提问"
-#         else:
-#             file_status = "文件未成功加载，请重新上传文件"
-#     else:
-#         file_status = "模型未完成加载，请先在加载模型后再导入文件"
-#         vs_path = None
-#     print(file_status)
-#     return vs_path, None, history + [[None, file_status]]
-
-# def add_vs_name(vs_name, vs_list, chatbot):
-#     if vs_name in vs_list:
-#         vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
-#         chatbot = chatbot + [[None, vs_status]]
-#         return gr.update(visible=True), vs_list, chatbot
-#     else:
-#         vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
-#         chatbot = chatbot + [[None, vs_status]]
-#         return gr.update(visible=True, choices=vs_list + [vs_name], value=vs_name), vs_list + [vs_name], chatbot
+    docChatbot.init_vector_db_from_documents(file_list)
+    docChatbot.save_vector_db_to_local(VS_ROOT_PATH, vs_name)
+    docChatbot.init_chatchain()
+    return f"Knowledge Base {vs_name} created and you may start a chat.", None, vs_list + [vs_name], gr.update(choices=vs_list+[vs_name], value=vs_name), gr.update(value="", placeholder="")
 
 def get_answer(message, chat_history):
     # result = "This is a test answer."
@@ -125,8 +88,11 @@ with gr.Blocks(css=block_css) as demo:
 
     with gr.Tab("Chat"):
         with gr.Row():
-            status = gr.TextArea(show_label=False, lines=1, interactive=False)
-            log("Please select a knowledge base to start a chat")
+            status = gr.TextArea(show_label=False, 
+                                 lines=1, 
+                                 interactive=False,
+                                 value="Please select a knowledge base to start a chat")
+            
 
         with gr.Row():
             with gr.Column(scale=10):
@@ -150,6 +116,9 @@ with gr.Blocks(css=block_css) as demo:
                                             show_label=False,
                                             value=vs_list.value[0] if len(vs_list.value) > 0 else None
                                             )
+                    if len(vs_list.value) > 0:
+                        switch_kb(vs_list.value[0])
+                        gr.update(value=f"Swithed to knowledge base: {vs_list.value[0]} and you may start a chat.")
 
                     select_vs.change(fn=select_vs_on_change,
                                      inputs=[select_vs],
@@ -174,14 +143,15 @@ with gr.Blocks(css=block_css) as demo:
                                          lines=1,
                                          interactive=True)
                     
-                    load_file_button = gr.Button("Upload")
+                    load_file_button = gr.Button("Upload & Create Knowledge Base")
                     
                     #将上传的文件保存到content文件夹下,并更新下拉框
                     load_file_button.click(fn=ingest_docs_to_vector_store,
                                            show_progress=True,
-                                           inputs=[vs_name, files, vs_list],
-                                           outputs=[select_vs, vs_list],
+                                           inputs=[vs_name, files, vs_list, select_vs],
+                                           outputs=[status, files, vs_list, select_vs, vs_name],
                                            )
+
 
 
 demo.launch()
