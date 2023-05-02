@@ -17,9 +17,10 @@ webui_title = """
 # Chat with Your Documents
 """
 
-init_message = """你好，我可以根据已有的知识库回答相关问题."""
+init_message = """Hello!"""
 
 VS_ROOT_PATH = "./data/vector_store"
+UPLOAD_ROOT_PATH = "./data/source_documents/"
 
 
 def log(msg: str):
@@ -44,35 +45,58 @@ def switch_kb(index: str):
     docChatbot.load_vector_db_from_local(VS_ROOT_PATH, index)
     docChatbot.init_chatchain()
 
+def ingest_docs_to_vector_store(vs_name, files, vs_list):
+    # print(vs_name)
+    # print(files)
 
-def get_vector_store(vs_id, files, history):
-    vs_path = VS_ROOT_PATH + vs_id
-    filelist = []
-    for file in files:
-        filename = os.path.split(file.name)[-1]
-        shutil.move(file.name, UPLOAD_ROOT_PATH + filename)
-        filelist.append(UPLOAD_ROOT_PATH + filename)
-    if local_doc_qa.llm and local_doc_qa.embeddings:
-        vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
-        if len(loaded_files):
-            file_status = f"已上传 {'、'.join([os.path.split(i)[-1] for i in loaded_files])} 至知识库，并已加载知识库，请开始提问"
-        else:
-            file_status = "文件未成功加载，请重新上传文件"
-    else:
-        file_status = "模型未完成加载，请先在加载模型后再导入文件"
-        vs_path = None
-    print(file_status)
-    return vs_path, None, history + [[None, file_status]]
+    file_list = []
+    if files is not []:
+        for file in files:
+            filename = os.path.split(file.name)[-1]
+            shutil.move(file.name, UPLOAD_ROOT_PATH + filename)
+            file_list.append(UPLOAD_ROOT_PATH + filename)
+        log("Documents uploaded.")
 
-def add_vs_name(vs_name, vs_list, chatbot):
+    
+    # Check if vs_name already exists
+    # create new kb and ingest data to vector store   
     if vs_name in vs_list:
-        vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
-        chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True), vs_list, chatbot
+        log(f"Knowledge base name {vs_name} already exists, please choose another name.")
     else:
-        vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
-        chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True, choices=vs_list + [vs_name], value=vs_name), vs_list + [vs_name], chatbot
+        docChatbot.init_vector_db_from_documents(file_list)
+        return gr.update(choices=vs_list+[vs_name], value=vs_name), vs_list + [vs_name]
+
+
+
+
+# def get_vector_store(vs_id, files, history):
+#     vs_path = VS_ROOT_PATH + vs_id
+#     filelist = []
+#     for file in files:
+#         filename = os.path.split(file.name)[-1]
+#         shutil.move(file.name, UPLOAD_ROOT_PATH + filename)
+#         filelist.append(UPLOAD_ROOT_PATH + filename)
+#     if local_doc_qa.llm and local_doc_qa.embeddings:
+#         vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
+#         if len(loaded_files):
+#             file_status = f"已上传 {'、'.join([os.path.split(i)[-1] for i in loaded_files])} 至知识库，并已加载知识库，请开始提问"
+#         else:
+#             file_status = "文件未成功加载，请重新上传文件"
+#     else:
+#         file_status = "模型未完成加载，请先在加载模型后再导入文件"
+#         vs_path = None
+#     print(file_status)
+#     return vs_path, None, history + [[None, file_status]]
+
+# def add_vs_name(vs_name, vs_list, chatbot):
+#     if vs_name in vs_list:
+#         vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
+#         chatbot = chatbot + [[None, vs_status]]
+#         return gr.update(visible=True), vs_list, chatbot
+#     else:
+#         vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
+#         chatbot = chatbot + [[None, vs_status]]
+#         return gr.update(visible=True, choices=vs_list + [vs_name], value=vs_name), vs_list + [vs_name], chatbot
 
 def get_answer(message, chat_history):
     # result = "This is a test answer."
@@ -117,10 +141,9 @@ with gr.Blocks(css=block_css) as demo:
                 )
 
             with gr.Column(scale=5):
-                vs_setting = gr.Accordion("Configure Knowledge Base")
-                with vs_setting:
+                vs_setting_switch = gr.Accordion("Switch Knowledge Base")
+                with vs_setting_switch:
                     select_vs = gr.Dropdown(vs_list.value,
-                                            label="Select Knowledge Base",
                                             interactive=True,
                                             value=vs_list.value[0] if len(vs_list.value) > 0 else None
                                             )
@@ -128,50 +151,34 @@ with gr.Blocks(css=block_css) as demo:
                     select_vs.change(fn=select_vs_on_change,
                                      inputs=[select_vs],
                                      outputs=[status, chatbot])
-                    
-                    
-                                            
-                    # vs_name = gr.Textbox(label="请输入新建知识库名称",
-                    #                      lines=1,
-                    #                      interactive=True)
+                
+                vs_setting_upload = gr.Accordion("Upload Documents to Create Knowledge Base")
+                with vs_setting_upload:
                     # vs_add = gr.Button(value="Load")
                     # vs_add.click(fn=add_vs_name,
                     #              inputs=[vs_name, vs_list, chatbot],
                     #              outputs=[select_vs, vs_list, chatbot])
 
-                    # file2vs = gr.Column(visible=True)
-                    # with file2vs:
-                    #     # load_vs = gr.Button("加载知识库")
-                    #     gr.Markdown("向知识库中添加文件")
-                    #     with gr.Tab("上传文件"):
-                    #         files = gr.File(label="添加文件",
-                    #                         file_types=['.txt', '.md', '.docx', '.pdf'],
-                    #                         file_count="multiple",
-                    #                         show_label=False
-                    #                         )
-                    #         load_file_button = gr.Button("上传文件并加载知识库")
-                    #     with gr.Tab("上传文件夹"):
-                    #         folder_files = gr.File(label="添加文件",
-                    #                                # file_types=['.txt', '.md', '.docx', '.pdf'],
-                    #                                file_count="directory",
-                    #                                show_label=False
-                    #                                )
-                    #         load_folder_button = gr.Button("上传文件夹并加载知识库")
-                    # load_vs.click(fn=)
+                    file2vs = gr.Column(visible=True)
+                    with file2vs:
+                        # load_vs = gr.Button("加载知识库")
+                        # gr.Markdown("Ingest documents to create a new knowledge base")
+                        files = gr.File(file_types=['.docx', '.pdf', '.pptx', '.txt', '.md', '.html'],
+                                        file_count="multiple"
+                                        )
+                        
+                    vs_name = gr.Textbox(label="Please input a name for the new knowledge base",
+                                         lines=1,
+                                         interactive=True)
                     
-                    # 将上传的文件保存到content文件夹下,并更新下拉框
-                    # load_file_button.click(get_vector_store,
-                    #                        show_progress=True,
-                    #                        inputs=[select_vs, files, chatbot],
-                    #                        outputs=[vs_path, files, chatbot],
-                    #                        )
-                    # load_folder_button.click(get_vector_store,
-                    #                          show_progress=True,
-                    #                          inputs=[select_vs, folder_files, chatbot],
-                    #                          outputs=[vs_path, folder_files, chatbot],
-                    #                          )
-
-    
+                    load_file_button = gr.Button("Upload")
+                    
+                    #将上传的文件保存到content文件夹下,并更新下拉框
+                    load_file_button.click(fn=ingest_docs_to_vector_store,
+                                           show_progress=True,
+                                           inputs=[vs_name, files, vs_list],
+                                           outputs=[select_vs, vs_list],
+                                           )
 
 
 demo.launch()
