@@ -35,7 +35,7 @@ def get_vs_list():
 
 def select_vs_on_change(vs_id):
     switch_kb(vs_id)
-    return f"Swithed to knowledge base: {vs_id} and you may start a chat.",  [[None, init_message]]
+    return [[None, init_message]]
 
 def switch_kb(index: str):
     docChatbot.load_vector_db_from_local(VS_ROOT_PATH, index)
@@ -47,7 +47,7 @@ def ingest_docs_to_vector_store(vs_name, files, vs_list, select_vs):
 
     # Check if vs_name already exists
     if vs_name in vs_list:
-        return f"ERROR: Failed to create knowledge base.", gr.update(visible=True), vs_list, select_vs, gr.update(value="", placeholder=f"Index name {vs_name} already exits.")
+        return gr.update(visible=True), vs_list, select_vs, gr.update(value="", placeholder=f"Index name {vs_name} already exits."), 
 
     file_list = []
     if files is not []:
@@ -61,7 +61,7 @@ def ingest_docs_to_vector_store(vs_name, files, vs_list, select_vs):
     docChatbot.init_vector_db_from_documents(file_list)
     docChatbot.save_vector_db_to_local(VS_ROOT_PATH, vs_name)
     docChatbot.init_chatchain()
-    return f"Knowledge Base {vs_name} created and you may start a chat.", None, vs_list + [vs_name], gr.update(choices=vs_list+[vs_name], value=vs_name), gr.update(value="", placeholder="")
+    return None, vs_list + [vs_name], gr.update(choices=vs_list+[vs_name]), gr.update(value="", placeholder="")
 
 def get_answer(message, chat_history):
     # result = "This is a test answer."
@@ -87,13 +87,6 @@ with gr.Blocks(css=block_css) as demo:
     gr.Markdown(webui_title)
 
     with gr.Tab("Chat"):
-        with gr.Row():
-            status = gr.TextArea(show_label=False, 
-                                 lines=1, 
-                                 interactive=False,
-                                 value="Please select a knowledge base to start a chat")
-            
-
         with gr.Row():
             with gr.Column(scale=10):
                 chatbot = gr.Chatbot([[None, init_message]],
@@ -122,7 +115,7 @@ with gr.Blocks(css=block_css) as demo:
 
                     select_vs.change(fn=select_vs_on_change,
                                      inputs=[select_vs],
-                                     outputs=[status, chatbot])
+                                     outputs=[chatbot])
                 
                 vs_setting_upload = gr.Accordion("Upload Documents to Create Knowledge Base")
                 with vs_setting_upload:
@@ -145,11 +138,10 @@ with gr.Blocks(css=block_css) as demo:
                     
                     load_file_button = gr.Button("Upload & Create Knowledge Base")
                     
-                    #将上传的文件保存到content文件夹下,并更新下拉框
                     load_file_button.click(fn=ingest_docs_to_vector_store,
                                            show_progress=True,
                                            inputs=[vs_name, files, vs_list, select_vs],
-                                           outputs=[status, files, vs_list, select_vs, vs_name],
+                                           outputs=[files, vs_list, select_vs, vs_name],
                                            )
 
 
