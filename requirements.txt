@@ -74,6 +74,7 @@ pydub==0.25.1
 Pygments==2.15.1
 pypandoc==1.11
 pyparsing==3.0.9
+pypdf==3.8.1
 pyrsistent==0.19.3
 python-dateutil==2.8.2
 python-docx==0.8.11
