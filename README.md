@@ -1,2 +1,98 @@
 # chat-with-your-doc
-Chat with your documentation
+
+`chat-with-your-doc` is a demonstration application that leverages the capabilities of Azure OpenAI GPT-4 and LangChain to enable users to chat with their documents. This repository hosts the codebase, instructions, and resources needed to set up and run the application.
+
+## Introduction
+
+The primary goal of this project is to simplify the interaction with documents and extract valuable information with using natural language. This project is built using LangChain and Azure OpenAI GPT-4/ChatGPT to deliver a smooth and natural conversational experience to the user.
+
+![](static/web_ui.png)
+
+## Features
+
+- Upload documents as external knowledge base for Azure OpenAI GPT-4/ChatGPT.
+- Support various format including PDF, DOCX, PPTX, TXT and etc.
+- Chat with the document content, ask questions, and get relevant answers based on the context.
+- User-friendly interface to ensure seamless interaction.
+
+## Installation
+
+To get started with `Chat-with-your-doc`, follow these steps:
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/linjungz/chat-with-your-doc.git
+```
+
+2. Change into the `chat-with-your-doc` directory:
+
+```bash
+cd chat-with-your-doc
+```
+
+3. Install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Configuration
+
+1. Obtain your Azure OpenAI API key, Endpoint and Deployment Name from the [Azure Portal](https://portal.azure.com/).
+
+2. Set the environment variable in `.env` file:
+
+```
+OPENAI_API_BASE=https://your-endpoint.openai.azure.com
+OPENAI_API_KEY=your-key-here
+OPENAI_DEPLOYMENT_NAME=your-deployment-name-here
+```
+
+## Usage: CLI
+
+The CLI application is built to support both `ingest` and `chat` commands. Python library `typer` is used to build the command line interface.
+
+### **Ingest**
+
+This command would take the documents as input, split the texts, generate the embeddings and store in a vector store `FAISS`. The vector store would be store locally for later used for chat.
+
+```bash
+$ python chat_cli.py ingest --help
+
+ Usage: chat_cli.py ingest [OPTIONS] DOC_PATH INDEX_NAME
+
+Arguments:
+doc_path        TEXT  Path to the documents to be ingested, support glob pattern [required]
+index_name      TEXT  Name of the index to be created [default: None] [required]
+
+Options:
+--help          Show this message and exit. 
+```
+
+### **Chat**
+
+This command would start a interactive chat, with documents as a external knowledge base in a vector store. You could choose which knowledge base to load for chat.
+
+```bash
+$ python chat_cli.py chat --help 
+
+Usage: chat_cli.py chat [OPTIONS]
+
+Options:
+--index-name        TEXT  [default: index]
+--help                    Show this message and exit.
+
+```
+
+## Usage: Web
+
+This will initialize the application and open up the user interface in your default web browser. You can now upload a document to create a knowledge base and start a conversation with it.
+
+`Gradio` is used for quickly building the Web GUI and `Hupper` is used to ease the development.
+
+For development purpuse, you may run `python watcher.py` to start the web gui. Or you may directly run `python chat_web.py` without monitoring the change of the source files.
+
+## License
+
+`chat-with-your-doc` is released under the [MIT License](LICENSE). See the `LICENSE` file for more details.
