@@ -30,7 +30,7 @@ class DocChatbot:
         openai.api_key = os.getenv("OPENAI_API_KEY")
 
         self.llm = AzureChatOpenAI(
-            deployment_name="gpt-4",
+            deployment_name=os.getenv("OPENAI_DEPLOYMENT_NAME"),
             temperature=0,
             openai_api_version="2023-03-15-preview"
         )
