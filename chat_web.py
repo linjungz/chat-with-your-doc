@@ -91,7 +91,7 @@ with gr.Blocks(css=block_css) as demo:
             with gr.Column(scale=10):
                 chatbot = gr.Chatbot([[None, init_message]],
                                      elem_id="chat-box",
-                                     show_label=False).style(height=400)
+                                     show_label=False).style(height=600)
                 query = gr.Textbox(show_label=False,
                                    placeholder="Input your question here and press Enter to get answer.",
                                    ).style(container=False)
