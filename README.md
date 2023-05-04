@@ -15,6 +15,11 @@ The primary goal of this project is to simplify the interaction with documents a
 - Chat with the document content, ask questions, and get relevant answers based on the context.
 - User-friendly interface to ensure seamless interaction.
 
+### Todo
+- [ ] Show source documents for answers in the web gui
+- [ ] Support streaming of answers
+- [ ] Support swith of chain type and streaming LangChain output in the web gui
+
 ## Installation
 
 To get started with `Chat-with-your-doc`, follow these steps:
@@ -92,6 +97,18 @@ This will initialize the application and open up the user interface in your defa
 `Gradio` is used for quickly building the Web GUI and `Hupper` is used to ease the development.
 
 For development purpuse, you may run `python watcher.py` to start the web gui. Or you may directly run `python chat_web.py` without monitoring the change of the source files.
+
+## Reference
+
+`Langchain` is leveraged to quickly build a workflow interacting with Azure GPT-4. `ConversationalRetrievalChain` is used in this particular use case to support chat history. You may refer to this [link](https://python.langchain.com/en/latest/modules/chains/index_examples/chat_vector_db.html) for more detail.
+
+For `chaintype`, by default `stuff` is used. For more detail, please refer to this [link](https://docs.langchain.com/docs/components/chains/index_related_chains)
+
+## Credits
+
+- The LangChain usage is inspired by [gpt4-pdf-chatbot-langchain](https://github.com/mayooear/gpt4-pdf-chatbot-langchain)
+- The Web GUI is inspired by [langchain-ChatGLM](https://github.com/imClumsyPanda/langchain-ChatGLM)
+- The processing of documents is inspired by [OpenAIEnterpriseChatBotAndQA](https://github.com/RicZhou-MS/OpenAIEnterpriseChatBotAndQA)
 
 ## License
 
