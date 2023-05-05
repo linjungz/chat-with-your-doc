@@ -20,6 +20,10 @@ The primary goal of this project is to simplify the interaction with documents a
 - [ ] Support streaming of answers
 - [ ] Support swith of chain type and streaming LangChain output in the web gui
 
+## Architecture
+
+![](./static/architecture.png)
+
 ## Installation
 
 To get started with `Chat-with-your-doc`, follow these steps:
