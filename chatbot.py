@@ -39,7 +39,8 @@ class DocChatbot:
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
-        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question.
+        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question. 
+        The question should be in the same language with the conversation. For example, if the conversation is in Chinese, the question should be in Chinese too.
             Chat History:
             {chat_history}
 
