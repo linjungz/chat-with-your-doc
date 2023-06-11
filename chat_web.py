@@ -73,6 +73,10 @@ def get_answer(message, chat_history):
 
     result_answer, result_source = docChatbot.get_answer_with_source(message, ch)
 
+    result_answer += "\n=== Reference ===\n"
+    for doc in result_source:
+        result_answer += (os.path.basename(doc.metadata['source']) + "(P" + str(doc.metadata['page']+1) + ")\n")
+
     chat_history.append((message, result_answer))
     return "", chat_history
 
