@@ -42,7 +42,14 @@ cd chat-with-your-doc
 
 3. Install the required Python packages:
 
-Suggest to install the python packages in a virtual environment and Python 3.10 is used in this project.
+Create virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install depenancies:
 
 ```bash
 pip install -r requirements.txt
