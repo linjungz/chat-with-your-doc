@@ -12,19 +12,19 @@ docChatbot = DocChatbot()
 
 @app.command()
 def ingest(
-        doc_path : Annotated[str, typer.Argument(help="Path to the documents to be ingested, support glob pattern", show_default=False)],
-        index_name : Annotated[str, typer.Argument(help="Name of the index to be created")]):
+        path : Annotated[str, typer.Option(help="Path to the documents to be ingested, support glob pattern", show_default=False)],
+        name : Annotated[str, typer.Option(help="Name of the index to be created", show_default=False)]):
     #support for glob in doc_path
-    file_list = glob.glob(doc_path)
+    file_list = glob.glob(path)
     # print(file_list)
     
     docChatbot.init_vector_db_from_documents(file_list)
-    docChatbot.save_vector_db_to_local(VECTORDB_PATH, index_name)
+    docChatbot.save_vector_db_to_local(VECTORDB_PATH, name)
 
 @app.command()
-def chat(index_name : str = "index"):
+def chat(name : str = "index"):
     
-    docChatbot.load_vector_db_from_local(VECTORDB_PATH, index_name)
+    docChatbot.load_vector_db_from_local(VECTORDB_PATH, name)
     docChatbot.init_chatchain()
 
     chat_history = []
