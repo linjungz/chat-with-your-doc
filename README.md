@@ -42,6 +42,8 @@ cd chat-with-your-doc
 
 3. Install the required Python packages:
 
+Suggest to install the python packages in a virtual environment and Python 3.10 is used in this project.
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -66,32 +68,31 @@ The CLI application is built to support both `ingest` and `chat` commands. Pytho
 
 This command would take the documents as input, split the texts, generate the embeddings and store in a vector store `FAISS`. The vector store would be store locally for later used for chat.
 
+![](./static/cli_ingest.png)
+
+For example if you want to put all the PDFs in the directory into one single vector store named `surface`, you could run:
+    
 ```bash
-$ python chat_cli.py ingest --help
-
- Usage: chat_cli.py ingest [OPTIONS] DOC_PATH INDEX_NAME
-
-Arguments:
-doc_path        TEXT  Path to the documents to be ingested, support glob pattern [required]
-index_name      TEXT  Name of the index to be created [default: None] [required]
-
-Options:
---help          Show this message and exit. 
+$ python chat_cli.py ingest --path "./data/source_documents/*.pdf" --name surface
 ```
+Note that the path should be enclosed with double quotes to avoid shell expansion.
 
 ### **Chat**
 
-This command would start a interactive chat, with documents as a external knowledge base in a vector store. You could choose which knowledge base to load for chat.
+This command would start a interactive chat, with documents as a external knowledge base in a vector store. You could choose which knowledge base to load for chat. 
+
+![CLI Chat](./static/cli_chat.png)
+
+Two sample documents about Surface has been provided in the [data/source_document](data/source_documents) directory and already ingested into the default vector store `index`, stored in the [data/vector_store](data/vector_store). You could run the following command to start a chat with the documents:
 
 ```bash
-$ python chat_cli.py chat --help 
+$ python chat_cli.py chat
+```
 
-Usage: chat_cli.py chat [OPTIONS]
+Or you could specify the vector store to load for chat:
 
-Options:
---index-name        TEXT  [default: index]
---help                    Show this message and exit.
-
+```bash
+$ python chat_cli.py chat --name surface
 ```
 
 ## Usage: Web
