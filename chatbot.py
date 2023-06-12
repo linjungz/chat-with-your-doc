@@ -24,22 +24,23 @@ class DocChatbot:
     def __init__(self) -> None:
         #init for OpenAI GPT-4 and Embeddings
         load_dotenv()
-        openai.api_type = "azure"
-        openai.api_version = "2023-03-15-preview"
-        openai.api_base = os.getenv("OPENAI_API_BASE")
-        openai.api_key = os.getenv("OPENAI_API_KEY")
 
         self.llm = AzureChatOpenAI(
             deployment_name=os.getenv("OPENAI_DEPLOYMENT_NAME"),
             temperature=0,
-            openai_api_version="2023-03-15-preview"
+            openai_api_version="2023-05-15",
+            openai_api_type="azure",
+            openai_api_base=os.getenv("OPENAI_API_BASE"),
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            request_timeout=30
         )
 
         self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", chunk_size=1)
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
-        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question.
+        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question. 
+        The follow up question should be in the same language with the input. For example, if the input is in Chinese, the follow up question or the standalone question below should be in Chinese too.
             Chat History:
             {chat_history}
 
@@ -103,8 +104,8 @@ class DocChatbot:
             docs.extend(doc)
             print("Processed document: " + file)
     
+        print("Generating embeddings and ingesting to vector db.")
         self.vector_db = FAISS.from_documents(docs, OpenAIEmbeddings(chunk_size=1))
-        print("Generated embeddings and ingested to vector db.")
-
+        print("Vector db initialized.")
 
         
