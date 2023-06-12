@@ -32,7 +32,8 @@ class DocChatbot:
         self.llm = AzureChatOpenAI(
             deployment_name=os.getenv("OPENAI_DEPLOYMENT_NAME"),
             temperature=0,
-            openai_api_version="2023-03-15-preview"
+            openai_api_version="2023-05-15",
+            request_timeout=30
         )
 
         self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", chunk_size=1)
@@ -40,7 +41,7 @@ class DocChatbot:
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
         CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question. 
-        The follow up question should be in the same language with the input. For example, if the input is in Chinese, the follow up question should be in Chinese too.
+        The follow up question should be in the same language with the input. For example, if the input is in Chinese, the follow up question or the standalone question below should be in Chinese too.
             Chat History:
             {chat_history}
 
@@ -104,7 +105,7 @@ class DocChatbot:
             docs.extend(doc)
             print("Processed document: " + file)
     
-        print("Generating embeddings and ingest to vector db.")
+        print("Generating embeddings and ingesting to vector db.")
         self.vector_db = FAISS.from_documents(docs, OpenAIEmbeddings(chunk_size=1))
         print("Vector db initialized.")
 
