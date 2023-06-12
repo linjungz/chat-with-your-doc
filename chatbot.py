@@ -26,7 +26,7 @@ class DocChatbot:
         load_dotenv()
 
         self.llm = AzureChatOpenAI(
-            deployment_name=os.getenv("OPENAI_DEPLOYMENT_NAME"),
+            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
             temperature=0,
             openai_api_version="2023-05-15",
             openai_api_type="azure",
@@ -35,7 +35,10 @@ class DocChatbot:
             request_timeout=30
         )
 
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", chunk_size=1)
+        self.embeddings = OpenAIEmbeddings(
+            deployment=os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME"), 
+            chunk_size=1
+            )
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
@@ -105,7 +108,7 @@ class DocChatbot:
             print("Processed document: " + file)
     
         print("Generating embeddings and ingesting to vector db.")
-        self.vector_db = FAISS.from_documents(docs, OpenAIEmbeddings(chunk_size=1))
+        self.vector_db = FAISS.from_documents(docs, self.embeddings)
         print("Vector db initialized.")
 
         
