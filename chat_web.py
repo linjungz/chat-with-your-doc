@@ -71,18 +71,20 @@ def get_answer(message, chat_history):
         a = "" if chat[1] == None else chat[1]
         ch.append((q, a))
 
+    #todo: need to handle exception
     result_answer, result_source = docChatbot.get_answer_with_source(message, ch)
 
     output_source = "\n\n"
     i = 0
     for doc in result_source:
-        reference_html = f"""<details> <summary>Reference [{i+1}] <a href="{doc.metadata["source"]}" target="_blank">{os.path.basename(doc.metadata["source"])}  P{doc.metadata['page']+1}</a> </summary>\n"""
+        reference_html = f"""<details> <summary>Reference [{i+1}] <a href="" target="_blank">{os.path.basename(doc.metadata["source"])}  P{doc.metadata['page']+1}</a> </summary>\n""" 
         reference_html += f"""{doc.page_content}\n"""
         reference_html += f"""</details>"""
         output_source += reference_html
         i += 1
-    
-    chat_history.append((message, result_answer + output_source))
+    #todo: show referenced pdf content in web ui
+
+    chat_history.append((message, result_answer))
     return "", chat_history
 
 # Init for web ui
@@ -156,5 +158,6 @@ with gr.Blocks(css=block_css) as demo:
 
 
 demo.launch(
+    server_name="0.0.0.0",
     server_port=8000
 )
