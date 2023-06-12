@@ -73,11 +73,16 @@ def get_answer(message, chat_history):
 
     result_answer, result_source = docChatbot.get_answer_with_source(message, ch)
 
-    result_answer += "\n=== Reference ===\n"
+    output_source = "\n\n"
+    i = 0
     for doc in result_source:
-        result_answer += (os.path.basename(doc.metadata['source']) + "(P" + str(doc.metadata['page']+1) + ")\n")
-
-    chat_history.append((message, result_answer))
+        reference_html = f"""<details> <summary>Reference [{i+1}] <a href="{doc.metadata["source"]}" target="_blank">{os.path.basename(doc.metadata["source"])}  P{doc.metadata['page']+1}</a> </summary>\n"""
+        reference_html += f"""{doc.page_content}\n"""
+        reference_html += f"""</details>"""
+        output_source += reference_html
+        i += 1
+    
+    chat_history.append((message, result_answer + output_source))
     return "", chat_history
 
 # Init for web ui
