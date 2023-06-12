@@ -24,15 +24,14 @@ class DocChatbot:
     def __init__(self) -> None:
         #init for OpenAI GPT-4 and Embeddings
         load_dotenv()
-        openai.api_type = "azure"
-        openai.api_version = "2023-03-15-preview"
-        openai.api_base = os.getenv("OPENAI_API_BASE")
-        openai.api_key = os.getenv("OPENAI_API_KEY")
 
         self.llm = AzureChatOpenAI(
             deployment_name=os.getenv("OPENAI_DEPLOYMENT_NAME"),
             temperature=0,
             openai_api_version="2023-05-15",
+            openai_api_type="azure",
+            openai_api_base=os.getenv("OPENAI_API_BASE"),
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
             request_timeout=30
         )
 
