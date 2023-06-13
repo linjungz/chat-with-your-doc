@@ -3,6 +3,7 @@ from chatbot import DocChatbot
 import shutil
 import os
 import fnmatch
+import re
 
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
@@ -64,11 +65,19 @@ def ingest_docs_to_vector_store(vs_name, files, vs_list, select_vs):
     return None, vs_list + [vs_name], gr.update(choices=vs_list+[vs_name]), gr.update(value="", placeholder="")
 
 def get_answer(message, chat_history):
-    # result = "This is a test answer."
+
+    #only process latest 4 messages to reduce token
+    MESSAGES_TO_REFERENCE = 4
+    msg_count = len(chat_history)
+    if msg_count > MESSAGES_TO_REFERENCE:
+        chat_history = chat_history[msg_count-MESSAGES_TO_REFERENCE:]
+
     ch = []
     for chat in chat_history:
         q = "" if chat[0] == None else chat[0]
         a = "" if chat[1] == None else chat[1]
+        # remove details for reference to reduce token
+        a = re.sub(r"<details>.*</details>", "", a)
         ch.append((q, a))
 
     #todo: need to handle exception
@@ -84,7 +93,7 @@ def get_answer(message, chat_history):
         i += 1
     #todo: show referenced pdf content in web ui
 
-    chat_history.append((message, result_answer))
+    chat_history.append((message, result_answer + output_source))
     return "", chat_history
 
 # Init for web ui

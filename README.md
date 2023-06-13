@@ -59,13 +59,16 @@ pip install -r requirements.txt
 
 1. Obtain your Azure OpenAI API key, Endpoint and Deployment Name from the [Azure Portal](https://portal.azure.com/).
 
-2. Set the environment variable in `.env` file:
+2. Create `.env` in the root dir and set the environment variable in the file:
 
 ```
 OPENAI_API_BASE=https://your-endpoint.openai.azure.com
 OPENAI_API_KEY=your-key-here
-OPENAI_DEPLOYMENT_NAME=your-deployment-name-here
+OPENAI_GPT_DEPLOYMENT_NAME=your-gpt-deployment-name
+OPENAI_EMBEDDING_DEPLOYMENT_NAME=your-embedding-deployment-name
 ```
+Here's where you can find the deployment names for GPT and Embedding:
+![Alt text](./static/deployment.png)
 
 ## Usage: CLI
 
