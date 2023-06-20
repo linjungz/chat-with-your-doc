@@ -26,6 +26,8 @@ The primary goal of this project is to simplify the interaction with documents a
 
 ## Installation
 
+> Suggest to install on Ubuntu instead of CentOS/Debian. See Issue https://github.com/linjungz/chat-with-your-doc/issues/12
+
 To get started with `Chat-with-your-doc`, follow these steps:
 
 1. Clone the repository:
