@@ -83,15 +83,25 @@ def get_answer(message, chat_history):
     #todo: need to handle exception
     result_answer, result_source = docChatbot.get_answer_with_source(message, ch)
 
+    # print(result_answer)
+    # print(result_source)
     output_source = "\n\n"
     i = 0
     for doc in result_source:
-        reference_html = f"""<details> <summary>Reference [{i+1}] <a href="" target="_blank">{os.path.basename(doc.metadata["source"])}  P{doc.metadata['page']+1}</a> </summary>\n""" 
+        reference_html = f"""<details> <summary>Reference [{i+1}] """
+
+        # For some PDF documents, PyPDF seems not able to extract the page number. So need to check the metadata of the source.
+        if "source" in doc.metadata:
+            reference_html += f"""{os.path.basename(doc.metadata["source"])} """
+        if "page" in doc.metadata:
+            reference_html += f"""P{doc.metadata['page']+1}"""
+            
+        reference_html += f"""</summary>\n"""
+
         reference_html += f"""{doc.page_content}\n"""
         reference_html += f"""</details>"""
         output_source += reference_html
         i += 1
-    #todo: show referenced pdf content in web ui
 
     chat_history.append((message, result_answer + output_source))
     return "", chat_history
@@ -115,7 +125,7 @@ with gr.Blocks(css=block_css) as demo:
                 query = gr.Textbox(show_label=False,
                                    placeholder="Input your question here and press Enter to get answer.",
                                    ).style(container=False)
-                query.submit(
+                query.submit( # type: ignore
                     get_answer,
                     [query,chatbot],
                     [query,chatbot]
