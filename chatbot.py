@@ -33,12 +33,12 @@ class DocChatbot:
             openai_api_base=os.getenv("OPENAI_API_BASE"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             request_timeout=30
-        )
+        ) # type: ignore
 
         self.embeddings = OpenAIEmbeddings(
             deployment=os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME"), 
             chunk_size=1
-            )
+            ) # type: ignore
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
