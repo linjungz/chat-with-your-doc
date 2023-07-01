@@ -12,7 +12,7 @@ COPY ./data/* /app/data/
 RUN pip install -r requirements.txt
 
 # Expose the port that the Gradio app will run on
-EXPOSE 7860
+EXPOSE 8000
 
 # Run the command to start the Gradio app
 CMD ["python", "chat_web.py"]
