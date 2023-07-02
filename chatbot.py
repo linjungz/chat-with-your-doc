@@ -3,6 +3,8 @@ import openai
 from dotenv import load_dotenv
 from langchain.chat_models import AzureChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings
+from langchain.callbacks.base import BaseCallbackHandler
+
 
 from langchain.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
@@ -14,14 +16,26 @@ import langchain.text_splitter as text_splitter
 from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTextSplitter)
 
 from typing import List
+import streamlit
+
+class StreamHandler(BaseCallbackHandler):
+    def __init__(self, container, initial_text=""):
+        self.container = container
+        self.text = initial_text
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.text += token
+        self.container.markdown(self.text)
+
 
 class DocChatbot:
     llm: AzureChatOpenAI
+    condens_question_llm: AzureChatOpenAI
     embeddings: OpenAIEmbeddings
     vector_db: FAISS
     chatchain: BaseConversationalRetrievalChain
 
-    def __init__(self) -> None:
+    def __init__(self, streaming = False, callbacks = []) -> None:
         #init for OpenAI GPT-4 and Embeddings
         load_dotenv()
 
@@ -32,13 +46,40 @@ class DocChatbot:
             openai_api_type="azure",
             openai_api_base=os.getenv("OPENAI_API_BASE"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
-            request_timeout=30
+            request_timeout=30,
         ) # type: ignore
+
+        self.condens_question_llm = self.llm
 
         self.embeddings = OpenAIEmbeddings(
             deployment=os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME"), 
             chunk_size=1
             ) # type: ignore
+
+    def init_streaming(self, condense_question_container, answer_container) -> None:
+        self.llm = AzureChatOpenAI(
+            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
+            temperature=0,
+            openai_api_version="2023-05-15",
+            openai_api_type="azure",
+            openai_api_base=os.getenv("OPENAI_API_BASE"),
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            request_timeout=30,
+            streaming=True,
+            callbacks=[StreamHandler(answer_container)]
+        ) # type: ignore
+
+        self.condens_question_llm = AzureChatOpenAI(
+            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
+            temperature=0,
+            openai_api_version="2023-05-15",
+            openai_api_type="azure",
+            openai_api_base=os.getenv("OPENAI_API_BASE"),
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            request_timeout=30,
+            streaming=True,
+            callbacks=[StreamHandler(condense_question_container, "🤔...")]
+        ) # type: ignore
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
@@ -57,9 +98,10 @@ class DocChatbot:
         self.chatchain = ConversationalRetrievalChain.from_llm(llm=self.llm, 
                                                 retriever=self.vector_db.as_retriever(),
                                                 condense_question_prompt=CONDENSE_QUESTION_PROMPT,
+                                                condense_question_llm=self.condens_question_llm,
                                                 chain_type=chain_type,
                                                 return_source_documents=True,
-                                                verbose=True)
+                                                verbose=False)
                                                 # combine_docs_chain_kwargs=dict(return_map_steps=False))
 
     # get answer from query, return answer and source documents
