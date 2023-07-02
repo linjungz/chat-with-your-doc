@@ -35,7 +35,7 @@ class DocChatbot:
     vector_db: FAISS
     chatchain: BaseConversationalRetrievalChain
 
-    def __init__(self, streaming = False, callbacks = []) -> None:
+    def __init__(self) -> None:
         #init for OpenAI GPT-4 and Embeddings
         load_dotenv()
 
@@ -83,8 +83,9 @@ class DocChatbot:
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
-        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question. 
-        The follow up question should be in the same language with the input. For example, if the input is in Chinese, the follow up question or the standalone question below should be in Chinese too.
+        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up input, rephrase the standalone question. 
+        The standanlone question to be generated should be in the same language with the input. 
+        For example, if the input is in Chinese, the follow up question or the standalone question below should be in Chinese too.
             Chat History:
             {chat_history}
 
@@ -92,8 +93,7 @@ class DocChatbot:
             {question}
 
             Standalone Question:"""
-            )
-                                                                    
+            )                                 
         # stuff chain_type seems working better than others
         self.chatchain = ConversationalRetrievalChain.from_llm(llm=self.llm, 
                                                 retriever=self.vector_db.as_retriever(),
@@ -138,7 +138,6 @@ class DocChatbot:
                 "chat_history": chat_history_for_chain
         },
         return_only_outputs=True)
-        print(result)
         
         return result['answer'], result['source_documents']
         
@@ -161,7 +160,7 @@ class DocChatbot:
         docs = []
         for file in file_list:
             print(f"Loading file: {file}")
-            ext_name = os.path.splitext(file)[1]
+            ext_name = os.path.splitext(file)[-1]
             # print(ext_name)
 
             if ext_name == ".pptx":
@@ -169,6 +168,7 @@ class DocChatbot:
             elif ext_name == ".docx":
                 loader = UnstructuredWordDocumentLoader(file)
             elif ext_name == ".pdf":
+                print("it's pdf")
                 loader = PyPDFLoader(file)
             else:
                 # process .txt, .html
@@ -180,6 +180,7 @@ class DocChatbot:
     
         print("Generating embeddings and ingesting to vector db.")
         self.vector_db = FAISS.from_documents(docs, self.embeddings)
+        print(self.vector_db)
         print("Vector db initialized.")
 
         

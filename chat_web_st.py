@@ -2,22 +2,46 @@ from chatbot import DocChatbot
 import shutil
 import os
 import streamlit as st
-
-docChatbot = DocChatbot()
-docChatbot.load_vector_db_from_local("./data/vector_store", "index")
+from datetime import datetime
 
 with st.sidebar:
-    "[Github Repo Link](https://github.com/linjungz/chat-with-your-doc)"
+    st.title("💬 Chat with Your Doc")
+    st.write("Upload a document and ask questions about it.")
+    with st.form("Upload and Process", True):
+        uploaded_file = st.file_uploader("Upload documents", type=["pdf", "md", "txt", "docx"])
+        submitted = st.form_submit_button("Process")
 
-st.title("💬 Chat with Your Doc")
+        if uploaded_file:
+            # Save the uploaded file to local
+            ext_name = os.path.splitext(uploaded_file.name)[-1]
+            timestamp = int(datetime.timestamp(datetime.now()))
+            local_file_name = f"""./data/uploaded/{timestamp}{ext_name}"""
+            with open(local_file_name, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+                f.close()
 
-if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+            if submitted:
+                with st.spinner("Initializing vector db..."):
+                    docChatBot = DocChatbot()
+                    docChatBot.init_vector_db_from_documents([local_file_name])
+                    st.session_state['docChatBot'] = docChatBot
+                    st.session_state["messages"] = [{"role": "assistant", "content": "Hi!😊"}]
 
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+                st.success("Vector db initialized.")
+                st.balloons()
+                
+    with st.container():
+        "[Github Repo Link](https://github.com/linjungz/chat-with-your-doc)"
+
+if 'messages' in st.session_state:
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).write(msg["content"])
 
 if user_input := st.chat_input():
+    if 'docChatBot' not in st.session_state:
+        st.error("Please upload a document in the side bar and click the 'Process' button.")
+        st.stop()
+
     # Get response from LLM
     st.session_state.messages.append({"role": "user", "content": user_input})
     st.chat_message("user").write(user_input)
@@ -26,10 +50,12 @@ if user_input := st.chat_input():
         # Streaming answer to the chat window
         condense_question_container = st.empty()
         answer_container = st.empty()
-        docChatbot.init_streaming(condense_question_container, answer_container)
-        docChatbot.init_chatchain()
-
-        result_answer, result_source = docChatbot.get_answer(
+        
+        docChatBot = st.session_state['docChatBot']
+        docChatBot.init_streaming(condense_question_container, answer_container)
+        docChatBot.init_chatchain()
+            
+        result_answer, result_source = docChatBot.get_answer(
             user_input, 
             st.session_state.messages)
         
