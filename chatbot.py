@@ -72,6 +72,35 @@ class DocChatbot:
         
         return result['answer'], result['source_documents']
 
+    # get answer from query. 
+    # This function is for streamlit app and the chat history is in a format aligned with openai api
+    def get_answer(self, query, chat_history):
+        ''' 
+        Here's the format for chat history:
+        [{"role": "assistant", "content": "How can I help you?"}, {"role": "user", "content": "What is your name?"}]
+        The input for the Chain is in a format like this:
+        [("How can I help you?", "What is your name?")]
+        That is, it's a list of question and answer pairs.
+        So need to transform the chat history to the format for the Chain
+        '''  
+        chat_history_for_chain = []
+
+        for i in range(0, len(chat_history), 2):
+            chat_history_for_chain.append((
+                chat_history[i]['content'], 
+                chat_history[i+1]['content'] if chat_history[i+1] is not None else ""
+                ))
+
+        result = self.chatchain({
+                "question": query,
+                "chat_history": chat_history_for_chain
+        },
+        return_only_outputs=True)
+        print(result)
+        
+        return result['answer'], result['source_documents']
+        
+
     # load vector db from local
     def load_vector_db_from_local(self, path: str, index_name: str):
         self.vector_db = FAISS.load_local(path, self.embeddings, index_name)
