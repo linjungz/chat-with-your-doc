@@ -3,6 +3,8 @@ import openai
 from dotenv import load_dotenv
 from langchain.chat_models import AzureChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings
+from langchain.callbacks.base import BaseCallbackHandler
+
 
 from langchain.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
@@ -14,9 +16,21 @@ import langchain.text_splitter as text_splitter
 from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTextSplitter)
 
 from typing import List
+import streamlit
+
+class StreamHandler(BaseCallbackHandler):
+    def __init__(self, container, initial_text=""):
+        self.container = container
+        self.text = initial_text
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.text += token
+        self.container.markdown(self.text)
+
 
 class DocChatbot:
     llm: AzureChatOpenAI
+    condens_question_llm: AzureChatOpenAI
     embeddings: OpenAIEmbeddings
     vector_db: FAISS
     chatchain: BaseConversationalRetrievalChain
@@ -32,18 +46,46 @@ class DocChatbot:
             openai_api_type="azure",
             openai_api_base=os.getenv("OPENAI_API_BASE"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
-            request_timeout=30
+            request_timeout=30,
         ) # type: ignore
+
+        self.condens_question_llm = self.llm
 
         self.embeddings = OpenAIEmbeddings(
             deployment=os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME"), 
             chunk_size=1
             ) # type: ignore
+
+    def init_streaming(self, condense_question_container, answer_container) -> None:
+        self.llm = AzureChatOpenAI(
+            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
+            temperature=0,
+            openai_api_version="2023-05-15",
+            openai_api_type="azure",
+            openai_api_base=os.getenv("OPENAI_API_BASE"),
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            request_timeout=30,
+            streaming=True,
+            callbacks=[StreamHandler(answer_container)]
+        ) # type: ignore
+
+        self.condens_question_llm = AzureChatOpenAI(
+            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
+            temperature=0,
+            openai_api_version="2023-05-15",
+            openai_api_type="azure",
+            openai_api_base=os.getenv("OPENAI_API_BASE"),
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            request_timeout=30,
+            streaming=True,
+            callbacks=[StreamHandler(condense_question_container, "🤔...")]
+        ) # type: ignore
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
-        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up question, rephrase the follow up question. 
-        The follow up question should be in the same language with the input. For example, if the input is in Chinese, the follow up question or the standalone question below should be in Chinese too.
+        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template("""Given the following conversation and a follow up input, rephrase the standalone question. 
+        The standanlone question to be generated should be in the same language with the input. 
+        For example, if the input is in Chinese, the follow up question or the standalone question below should be in Chinese too.
             Chat History:
             {chat_history}
 
@@ -51,15 +93,15 @@ class DocChatbot:
             {question}
 
             Standalone Question:"""
-            )
-                                                                    
+            )                                 
         # stuff chain_type seems working better than others
         self.chatchain = ConversationalRetrievalChain.from_llm(llm=self.llm, 
                                                 retriever=self.vector_db.as_retriever(),
                                                 condense_question_prompt=CONDENSE_QUESTION_PROMPT,
+                                                condense_question_llm=self.condens_question_llm,
                                                 chain_type=chain_type,
                                                 return_source_documents=True,
-                                                verbose=True)
+                                                verbose=False)
                                                 # combine_docs_chain_kwargs=dict(return_map_steps=False))
 
     # get answer from query, return answer and source documents
@@ -71,6 +113,34 @@ class DocChatbot:
         return_only_outputs=True)
         
         return result['answer'], result['source_documents']
+
+    # get answer from query. 
+    # This function is for streamlit app and the chat history is in a format aligned with openai api
+    def get_answer(self, query, chat_history):
+        ''' 
+        Here's the format for chat history:
+        [{"role": "assistant", "content": "How can I help you?"}, {"role": "user", "content": "What is your name?"}]
+        The input for the Chain is in a format like this:
+        [("How can I help you?", "What is your name?")]
+        That is, it's a list of question and answer pairs.
+        So need to transform the chat history to the format for the Chain
+        '''  
+        chat_history_for_chain = []
+
+        for i in range(0, len(chat_history), 2):
+            chat_history_for_chain.append((
+                chat_history[i]['content'], 
+                chat_history[i+1]['content'] if chat_history[i+1] is not None else ""
+                ))
+
+        result = self.chatchain({
+                "question": query,
+                "chat_history": chat_history_for_chain
+        },
+        return_only_outputs=True)
+        
+        return result['answer'], result['source_documents']
+        
 
     # load vector db from local
     def load_vector_db_from_local(self, path: str, index_name: str):
@@ -90,7 +160,7 @@ class DocChatbot:
         docs = []
         for file in file_list:
             print(f"Loading file: {file}")
-            ext_name = os.path.splitext(file)[1]
+            ext_name = os.path.splitext(file)[-1]
             # print(ext_name)
 
             if ext_name == ".pptx":
@@ -98,6 +168,7 @@ class DocChatbot:
             elif ext_name == ".docx":
                 loader = UnstructuredWordDocumentLoader(file)
             elif ext_name == ".pdf":
+                print("it's pdf")
                 loader = PyPDFLoader(file)
             else:
                 # process .txt, .html
@@ -109,6 +180,7 @@ class DocChatbot:
     
         print("Generating embeddings and ingesting to vector db.")
         self.vector_db = FAISS.from_documents(docs, self.embeddings)
+        print(self.vector_db)
         print("Vector db initialized.")
 
         
