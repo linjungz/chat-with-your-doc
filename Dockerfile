@@ -15,4 +15,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8501
 
 # Run the command to start the Gradio app
-CMD ["streamlit", "run", "chat_web_st.py"]
+CMD ["streamlit", "run", "chat_web_st.py", "--server.address", "0.0.0.0"]
