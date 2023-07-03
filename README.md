@@ -1,12 +1,16 @@
 # chat-with-your-doc
 
-`chat-with-your-doc` is a demonstration application that leverages the capabilities of Azure OpenAI GPT-4 and LangChain to enable users to chat with their documents. This repository hosts the codebase, instructions, and resources needed to set up and run the application.
+`chat-with-your-doc` is a demonstration application that leverages the capabilities of Azure OpenAI ChatGPT/GPT-4 and LangChain to enable users to chat with their documents. This repository hosts the codebase, instructions, and resources needed to set up and run the application.
 
 ## Introduction
 
 The primary goal of this project is to simplify the interaction with documents and extract valuable information with using natural language. This project is built using LangChain and Azure OpenAI GPT-4/ChatGPT to deliver a smooth and natural conversational experience to the user.
 
 ![](static/web_ui.png)
+
+## Updates
+
+- 20230703 [v0.3.0](https://github.com/linjungz/chat-with-your-doc/releases/tag/v0.3.0): Web UI changed to Streamlit, with support for streaming
 
 ## Features
 
@@ -16,8 +20,8 @@ The primary goal of this project is to simplify the interaction with documents a
 - User-friendly interface to ensure seamless interaction.
 
 ### Todo
-- [ ] Show source documents for answers in the web gui
-- [ ] Support streaming of answers
+- [ x ] Show source documents for answers in the web gui
+- [ x ] Support streaming of answers
 - [ ] Support swith of chain type and streaming LangChain output in the web gui
 
 ## Architecture
@@ -72,6 +76,23 @@ OPENAI_EMBEDDING_DEPLOYMENT_NAME=your-embedding-deployment-name
 Here's where you can find the deployment names for GPT and Embedding:
 ![Alt text](./static/deployment.png)
 
+## Usage: Web
+
+This will initialize the application based on `Streamlit` and open up the user interface in your default web browser. You can now upload a document to create a knowledge base and start a conversation with it.
+
+```bash
+$ streamlit run chat_web_st.py --server.address '0.0.0.0'
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to False.
+
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501```
+```
+
+Note that the previous Web UI built using Gradio is deprecated and no longer maintained. You could find the code in the [chat_web.py](chat_web.py) file.
+
 ## Usage: CLI
 
 The CLI application is built to support both `ingest` and `chat` commands. Python library `typer` is used to build the command line interface.
@@ -107,14 +128,6 @@ Or you could specify the vector store to load for chat:
 $ python chat_cli.py chat --name surface
 ```
 
-## Usage: Web
-
-This will initialize the application and open up the user interface in your default web browser. You can now upload a document to create a knowledge base and start a conversation with it.
-
-`Gradio` is used for quickly building the Web GUI and `Hupper` is used to ease the development.
-
-For development purpuse, you may run `python watcher.py` to start the web gui. Or you may directly run `python chat_web.py` without monitoring the change of the source files.
-
 ## Reference
 
 `Langchain` is leveraged to quickly build a workflow interacting with Azure GPT-4. `ConversationalRetrievalChain` is used in this particular use case to support chat history. You may refer to this [link](https://python.langchain.com/en/latest/modules/chains/index_examples/chat_vector_db.html) for more detail.
@@ -124,7 +137,7 @@ For `chaintype`, by default `stuff` is used. For more detail, please refer to th
 ## Credits
 
 - The LangChain usage is inspired by [gpt4-pdf-chatbot-langchain](https://github.com/mayooear/gpt4-pdf-chatbot-langchain)
-- The Web GUI is inspired by [langchain-ChatGLM](https://github.com/imClumsyPanda/langchain-ChatGLM)
+- The integration of langchain streaming and Stremlit is inspired by [Examples from Streamlit](https://github.com/streamlit/llm-examples)
 - The processing of documents is inspired by [OpenAIEnterpriseChatBotAndQA](https://github.com/RicZhou-MS/OpenAIEnterpriseChatBotAndQA)
 
 ## License
