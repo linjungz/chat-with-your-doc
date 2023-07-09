@@ -1,10 +1,10 @@
 # chat-with-your-doc
 
-`chat-with-your-doc` is a demonstration application that leverages the capabilities of Azure OpenAI ChatGPT/GPT-4 and LangChain to enable users to chat with their documents. This repository hosts the codebase, instructions, and resources needed to set up and run the application.
+`chat-with-your-doc` is a demonstration application that leverages the capabilities of ChatGPT/GPT-4 and LangChain to enable users to chat with their documents. This repository hosts the codebase, instructions, and resources needed to set up and run the application.
 
 ## Introduction
 
-The primary goal of this project is to simplify the interaction with documents and extract valuable information with using natural language. This project is built using LangChain and Azure OpenAI GPT-4/ChatGPT to deliver a smooth and natural conversational experience to the user.
+The primary goal of this project is to simplify the interaction with documents and extract valuable information with using natural language. This project is built using LangChain and GPT-4/ChatGPT to deliver a smooth and natural conversational experience to the user, with support for both `Azure OpenAI Services` and `OpenAI`
 
 ![](static/web_ui.png)
 
@@ -14,7 +14,7 @@ The primary goal of this project is to simplify the interaction with documents a
 
 ## Features
 
-- Upload documents as external knowledge base for Azure OpenAI GPT-4/ChatGPT.
+- Upload documents as external knowledge base for GPT-4/ChatGPT, support both `Azure OpenAI Services` and `OpenAI`
 - Support various format including PDF, DOCX, PPTX, TXT and etc.
 - Chat with the document content, ask questions, and get relevant answers based on the context.
 - User-friendly interface to ensure seamless interaction.
@@ -63,9 +63,11 @@ pip install -r requirements.txt
 
 ## Configuration
 
+### Azure OpenAI Services
+
 1. Obtain your Azure OpenAI API key, Endpoint and Deployment Name from the [Azure Portal](https://portal.azure.com/).
 
-2. Create `.env` in the root dir and set the environment variable in the file:
+2. Create `.env` in the root dir and set the environment variables in the file:
 
 ```
 OPENAI_API_BASE=https://your-endpoint.openai.azure.com
@@ -75,6 +77,16 @@ OPENAI_EMBEDDING_DEPLOYMENT_NAME=your-embedding-deployment-name
 ```
 Here's where you can find the deployment names for GPT and Embedding:
 ![Alt text](./static/deployment.png)
+
+### OpenAI
+
+1. Obtain your OpenAI API key from the [platform.openai.com](https://platform.openai.com/account/api-keys).
+
+2. Create `.env` in the root dir and set the environment variable in the file:
+
+```
+OPENAI_API_KEY=your-key-here
+```
 
 ## Usage: Web
 
