@@ -10,7 +10,8 @@ The primary goal of this project is to simplify the interaction with documents a
 
 ## Updates
 
-- 20230703 [v0.3.0](https://github.com/linjungz/chat-with-your-doc/releases/tag/v0.3.0): Web UI changed to Streamlit, with support for streaming
+- 20230709: Add Support for OpenAI API
+- 20230703: Web UI changed to Streamlit, with support for streaming
 
 ## Features
 
