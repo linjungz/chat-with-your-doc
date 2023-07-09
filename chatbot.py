@@ -2,6 +2,7 @@ import os
 import openai
 from dotenv import load_dotenv
 from langchain.chat_models import AzureChatOpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.callbacks.base import BaseCallbackHandler
 
@@ -18,6 +19,8 @@ from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTe
 from typing import List
 import streamlit
 
+REQUEST_TIMEOUT = 10
+
 class StreamHandler(BaseCallbackHandler):
     def __init__(self, container, initial_text=""):
         self.container = container
@@ -29,57 +32,98 @@ class StreamHandler(BaseCallbackHandler):
 
 
 class DocChatbot:
-    llm: AzureChatOpenAI
-    condens_question_llm: AzureChatOpenAI
+    llm: ChatOpenAI
+    condens_question_llm: ChatOpenAI
     embeddings: OpenAIEmbeddings
     vector_db: FAISS
     chatchain: BaseConversationalRetrievalChain
 
     def __init__(self) -> None:
-        #init for OpenAI GPT-4 and Embeddings
+        #init for LLM and Embeddings
         load_dotenv()
+        assert(os.getenv("OPENAI_API_KEY") is not None)
+        api_key = str(os.getenv("OPENAI_API_KEY"))
+        embedding_deployment = "text-embedding-ada-002"
 
-        self.llm = AzureChatOpenAI(
-            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-            temperature=0,
-            openai_api_version="2023-05-15",
-            openai_api_type="azure",
-            openai_api_base=os.getenv("OPENAI_API_BASE"),
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
-            request_timeout=30,
-        ) # type: ignore
+        #check if user is using API from openai.com or Azure OpenAI Service by inspecting the api key
+        if api_key.startswith("sk-"):
+            # user is using API from openai.com
+            assert(len(api_key) == 51)
+
+            self.llm = ChatOpenAI(
+                temperature=0,
+                openai_api_key=api_key,
+                request_timeout=REQUEST_TIMEOUT,
+            ) # type: ignore
+        else:
+            # user is using Azure OpenAI Service
+            assert(os.getenv("OPENAI_GPT_DEPLOYMENT_NAME") is not None)
+            assert(os.getenv("OPENAI_API_BASE") is not None)
+            assert(len(api_key) == 32)
+
+            self.llm = AzureChatOpenAI(
+                deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
+                temperature=0,
+                openai_api_version="2023-05-15",
+                openai_api_type="azure",
+                openai_api_base=os.getenv("OPENAI_API_BASE"),
+                openai_api_key=api_key,
+                request_timeout=REQUEST_TIMEOUT,
+            ) # type: ignore
+
+            embedding_deployment = os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME")
 
         self.condens_question_llm = self.llm
 
         self.embeddings = OpenAIEmbeddings(
-            deployment=os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME"), 
+            deployment=embedding_deployment, 
             chunk_size=1
             ) # type: ignore
 
     def init_streaming(self, condense_question_container, answer_container) -> None:
-        self.llm = AzureChatOpenAI(
-            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-            temperature=0,
-            openai_api_version="2023-05-15",
-            openai_api_type="azure",
-            openai_api_base=os.getenv("OPENAI_API_BASE"),
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
-            request_timeout=30,
-            streaming=True,
-            callbacks=[StreamHandler(answer_container)]
-        ) # type: ignore
+        api_key = str(os.getenv("OPENAI_API_KEY"))
+        if api_key.startswith("sk-"):
+            # user is using API from openai.com
+            self.llm = ChatOpenAI(
+                temperature=0,
+                openai_api_key=api_key,
+                request_timeout=REQUEST_TIMEOUT,
+                streaming=True,
+                callbacks=[StreamHandler(answer_container)]
+            ) # type: ignore
 
-        self.condens_question_llm = AzureChatOpenAI(
-            deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-            temperature=0,
-            openai_api_version="2023-05-15",
-            openai_api_type="azure",
-            openai_api_base=os.getenv("OPENAI_API_BASE"),
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
-            request_timeout=30,
-            streaming=True,
-            callbacks=[StreamHandler(condense_question_container, "🤔...")]
-        ) # type: ignore
+            self.condens_question_llm = ChatOpenAI(
+                temperature=0,
+                openai_api_key=api_key,
+                request_timeout=REQUEST_TIMEOUT,
+                streaming=True,
+                callbacks=[StreamHandler(condense_question_container, "🤔...")]
+            ) # type: ignore
+        else:
+            # user is using Azure OpenAI Service
+            self.llm = AzureChatOpenAI(
+                deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
+                temperature=0,
+                openai_api_version="2023-05-15",
+                openai_api_type="azure",
+                openai_api_base=os.getenv("OPENAI_API_BASE"),
+                openai_api_key=os.getenv("OPENAI_API_KEY"),
+                request_timeout=REQUEST_TIMEOUT,
+                streaming=True,
+                callbacks=[StreamHandler(answer_container)]
+            ) # type: ignore
+
+            self.condens_question_llm = AzureChatOpenAI(
+                deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
+                temperature=0,
+                openai_api_version="2023-05-15",
+                openai_api_type="azure",
+                openai_api_base=os.getenv("OPENAI_API_BASE"),
+                openai_api_key=os.getenv("OPENAI_API_KEY"),
+                request_timeout=REQUEST_TIMEOUT,
+                streaming=True,
+                callbacks=[StreamHandler(condense_question_container, "🤔...")]
+            ) # type: ignore
         
     def init_chatchain(self, chain_type : str = "stuff") -> None:
         # init for ConversationalRetrievalChain
@@ -180,7 +224,6 @@ class DocChatbot:
     
         print("Generating embeddings and ingesting to vector db.")
         self.vector_db = FAISS.from_documents(docs, self.embeddings)
-        print(self.vector_db)
         print("Vector db initialized.")
 
         
