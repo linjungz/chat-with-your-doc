@@ -67,7 +67,7 @@ class DocChatbot:
 
             self.llm = AzureChatOpenAI(
                 deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-                temperature=self.temperature,
+                temperature=temperature,
                 openai_api_version="2023-05-15",
                 openai_api_type="azure",
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
@@ -87,49 +87,52 @@ class DocChatbot:
 
     def init_streaming(self, condense_question_container, answer_container) -> None:
         api_key = str(os.getenv("OPENAI_API_KEY"))
+        temperature=float(os.getenv("TEMPERATURE"))
+        request_timeout=int(os.getenv("REQUEST_TIMEOUT"))
+        model_name=str(os.getenv("CHAT_MODEL_NAME"))
         if api_key.startswith("sk-"):
             # user is using API from openai.com
             self.llm = ChatOpenAI(
-                temperature=self.temperature,
+                temperature=temperature,
                 openai_api_key=api_key,
-                request_timeout=self.request_timeout,
+                request_timeout=request_timeout,
                 streaming=True,
-                model=self.model_name,
+                model=model_name,
                 callbacks=[StreamHandler(answer_container)]
             ) # type: ignore
 
             self.condens_question_llm = ChatOpenAI(
-                temperature=self.temperature,
+                temperature=temperature,
                 openai_api_key=api_key,
-                request_timeout=self.request_timeout,
+                request_timeout=request_timeout,
                 streaming=True,
-                model=self.model_name,
+                model=model_name,
                 callbacks=[StreamHandler(condense_question_container, "🤔...")]
             ) # type: ignore
         else:
             # user is using Azure OpenAI Service
             self.llm = AzureChatOpenAI(
                 deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-                temperature=self.temperature,
+                temperature=temperature,
                 openai_api_version="2023-05-15",
                 openai_api_type="azure",
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
                 openai_api_key=os.getenv("OPENAI_API_KEY"),
-                request_timeout=self.request_timeout,
-                model=self.model_name,
+                request_timeout=request_timeout,
+                model=model_name,
                 streaming=True,
                 callbacks=[StreamHandler(answer_container)]
             ) # type: ignore
 
             self.condens_question_llm = AzureChatOpenAI(
                 deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-                temperature=self.temperature,
+                temperature=temperature,
                 openai_api_version="2023-05-15",
                 openai_api_type="azure",
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
                 openai_api_key=os.getenv("OPENAI_API_KEY"),
-                request_timeout=self.request_timeout,
-                model=self.model_name,
+                request_timeout=request_timeout,
+                model=model_name,
                 streaming=True,
                 callbacks=[StreamHandler(condense_question_container, "🤔...")]
             ) # type: ignore
