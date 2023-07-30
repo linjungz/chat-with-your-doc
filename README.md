@@ -87,6 +87,11 @@ Here's where you can find the deployment names for GPT and Embedding:
 
 ```
 OPENAI_API_KEY=your-key-here
+CHAT_MODEL_NAME="gpt-4-0314"
+OPENAI_EMBEDDING_DEPLOYMENT_NAME="text-embedding-ada-002"
+REQUEST_TIMEOUT=60
+VECTORDB_PATH = "./data/vector_store"
+TEMPERATURE = 0
 ```
 
 ## Usage: Web
