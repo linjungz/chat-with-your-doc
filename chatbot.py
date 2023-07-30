@@ -46,6 +46,7 @@ class DocChatbot:
         embedding_deployment = os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME")
         request_timeout = int(os.getenv("REQUEST_TIMEOUT"))
         temperature = int(os.getenv("TEMPERATURE"))
+        model_name = str(os.getenv("CHAT_MODEL_NAME"))
 
         #check if user is using API from openai.com or Azure OpenAI Service by inspecting the api key
         if api_key.startswith("sk-"):
@@ -56,6 +57,7 @@ class DocChatbot:
                 temperature=temperature,
                 openai_api_key=api_key,
                 request_timeout=request_timeout,
+                model=model_name
             ) # type: ignore
         else:
             # user is using Azure OpenAI Service
@@ -71,6 +73,7 @@ class DocChatbot:
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
                 openai_api_key=api_key,
                 request_timeout=request_timeout,
+                model=model_name
             ) # type: ignore
 
             embedding_deployment = os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME")
@@ -91,6 +94,7 @@ class DocChatbot:
                 openai_api_key=api_key,
                 request_timeout=self.request_timeout,
                 streaming=True,
+                model=self.model_name,
                 callbacks=[StreamHandler(answer_container)]
             ) # type: ignore
 
@@ -99,6 +103,7 @@ class DocChatbot:
                 openai_api_key=api_key,
                 request_timeout=self.request_timeout,
                 streaming=True,
+                model=self.model_name,
                 callbacks=[StreamHandler(condense_question_container, "🤔...")]
             ) # type: ignore
         else:
@@ -111,6 +116,7 @@ class DocChatbot:
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
                 openai_api_key=os.getenv("OPENAI_API_KEY"),
                 request_timeout=self.request_timeout,
+                model=self.model_name,
                 streaming=True,
                 callbacks=[StreamHandler(answer_container)]
             ) # type: ignore
@@ -123,6 +129,7 @@ class DocChatbot:
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
                 openai_api_key=os.getenv("OPENAI_API_KEY"),
                 request_timeout=self.request_timeout,
+                model=self.model_name,
                 streaming=True,
                 callbacks=[StreamHandler(condense_question_container, "🤔...")]
             ) # type: ignore
