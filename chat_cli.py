@@ -1,12 +1,11 @@
 from chatbot import DocChatbot
 import typer
 from typing_extensions import Annotated
+from dotenv import load_dotenv
 
 import glob
 
 
-
-VECTORDB_PATH = "./data/vector_store"
 app = typer.Typer()
 docChatbot = DocChatbot()
 
