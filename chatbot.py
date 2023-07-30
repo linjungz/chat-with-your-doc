@@ -45,6 +45,7 @@ class DocChatbot:
         api_key = str(os.getenv("OPENAI_API_KEY"))
         embedding_deployment = "text-embedding-ada-002"
         request_timeout = int(os.getenv("REQUEST_TIMEOUT"))
+        temperature = int(os.getenv("TEMPERATURE"))
 
         #check if user is using API from openai.com or Azure OpenAI Service by inspecting the api key
         if api_key.startswith("sk-"):
@@ -52,7 +53,7 @@ class DocChatbot:
             assert(len(api_key) == 51)
 
             self.llm = ChatOpenAI(
-                temperature=0,
+                temperature=temperature,
                 openai_api_key=api_key,
                 request_timeout=request_timeout,
             ) # type: ignore
@@ -64,7 +65,7 @@ class DocChatbot:
 
             self.llm = AzureChatOpenAI(
                 deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-                temperature=0,
+                temperature=self.temperature,
                 openai_api_version="2023-05-15",
                 openai_api_type="azure",
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
@@ -86,7 +87,7 @@ class DocChatbot:
         if api_key.startswith("sk-"):
             # user is using API from openai.com
             self.llm = ChatOpenAI(
-                temperature=0,
+                temperature=self.temperature,
                 openai_api_key=api_key,
                 request_timeout=self.request_timeout,
                 streaming=True,
@@ -94,7 +95,7 @@ class DocChatbot:
             ) # type: ignore
 
             self.condens_question_llm = ChatOpenAI(
-                temperature=0,
+                temperature=self.temperature,
                 openai_api_key=api_key,
                 request_timeout=self.request_timeout,
                 streaming=True,
@@ -104,7 +105,7 @@ class DocChatbot:
             # user is using Azure OpenAI Service
             self.llm = AzureChatOpenAI(
                 deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-                temperature=0,
+                temperature=self.temperature,
                 openai_api_version="2023-05-15",
                 openai_api_type="azure",
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
@@ -116,7 +117,7 @@ class DocChatbot:
 
             self.condens_question_llm = AzureChatOpenAI(
                 deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
-                temperature=0,
+                temperature=self.temperature,
                 openai_api_version="2023-05-15",
                 openai_api_type="azure",
                 openai_api_base=os.getenv("OPENAI_API_BASE"),
