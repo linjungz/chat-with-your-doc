@@ -1,13 +1,15 @@
 from chatbot import DocChatbot
 import typer
 from typing_extensions import Annotated
+import os
 from dotenv import load_dotenv
 
 import glob
 
-
 app = typer.Typer()
 docChatbot = DocChatbot()
+load_dotenv()
+VECTORDB_PATH = int(os.getenv("VECTORDB_PATH"))
 
 @app.command()
 def ingest(
