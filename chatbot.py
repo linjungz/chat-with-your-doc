@@ -18,7 +18,7 @@ from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTe
 
 from typing import List
 import streamlit
-
+import glob
 
 
 class StreamHandler(BaseCallbackHandler):
@@ -238,4 +238,7 @@ class DocChatbot:
         self.vector_db = FAISS.from_documents(docs, self.embeddings)
         print("Vector db initialized.")
 
+    # Get indexes available
+    def get_available_indexes(self, path: str):
+        return [os.path.splitext(os.path.basename(file))[0] for file in glob.glob(f"{path}/*.faiss")]
         
