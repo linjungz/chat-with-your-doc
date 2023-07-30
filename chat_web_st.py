@@ -12,23 +12,31 @@ with st.sidebar:
         submitted = st.form_submit_button("Process")
 
         if uploaded_file:
-            # Save the uploaded file to local
-            ext_name = os.path.splitext(uploaded_file.name)[-1]
-            timestamp = int(datetime.timestamp(datetime.now()))
-            local_file_name = f"""./data/uploaded/{timestamp}{ext_name}"""
-            with open(local_file_name, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-                f.close()
+            try:
+                ext_name = os.path.splitext(uploaded_file.name)[-1]
+                if ext_name not in [".pdf", ".md", ".txt", ".docx"]:
+                    st.error("Unsupported file type.")
+                    st.stop()
+                # Save the uploaded file to local
+                ext_name = os.path.splitext(uploaded_file.name)[-1]
+                timestamp = int(datetime.timestamp(datetime.now()))
+                local_file_name = f"""./data/uploaded/{timestamp}{ext_name}"""
+                with open(local_file_name, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                    f.close()
 
-            if submitted:
-                with st.spinner("Initializing vector db..."):
-                    docChatBot = DocChatbot()
-                    docChatBot.init_vector_db_from_documents([local_file_name])
-                    st.session_state['docChatBot'] = docChatBot
-                    st.session_state["messages"] = [{"role": "assistant", "content": "Hi!😊"}]
+                if submitted:
+                    with st.spinner("Initializing vector db..."):
+                        docChatBot = DocChatbot()
+                        docChatBot.init_vector_db_from_documents([local_file_name])
+                        st.session_state['docChatBot'] = docChatBot
+                        st.session_state["messages"] = [{"role": "assistant", "content": "Hi!😊"}]
 
-                st.success("Vector db initialized.")
-                st.balloons()
+                    st.success("Vector db initialized.")
+                    st.balloons()
+            except Exception as e:
+                st.error(f"An error occurred while processing the file: {str(e)}")
+                st.stop()
                 
     with st.container():
         "[Github Repo Link](https://github.com/linjungz/chat-with-your-doc)"
