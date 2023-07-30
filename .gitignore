@@ -4,3 +4,4 @@ __pycache__/*
 data/uploaded/*
 data/vector_store/*
 *.code-workspace
+*.DS_STORE
