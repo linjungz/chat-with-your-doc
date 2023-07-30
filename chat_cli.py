@@ -9,7 +9,7 @@ import glob
 app = typer.Typer()
 docChatbot = DocChatbot()
 load_dotenv()
-VECTORDB_PATH = int(os.getenv("VECTORDB_PATH"))
+VECTORDB_PATH = os.getenv("VECTORDB_PATH")
 
 @app.command()
 def ingest(
