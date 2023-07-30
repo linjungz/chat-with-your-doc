@@ -43,7 +43,7 @@ class DocChatbot:
         load_dotenv()
         assert(os.getenv("OPENAI_API_KEY") is not None)
         api_key = str(os.getenv("OPENAI_API_KEY"))
-        embedding_deployment = "text-embedding-ada-002"
+        embedding_deployment = os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME")
         request_timeout = int(os.getenv("REQUEST_TIMEOUT"))
         temperature = int(os.getenv("TEMPERATURE"))
 
