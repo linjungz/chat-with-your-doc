@@ -3,5 +3,6 @@
 __pycache__/*
 data/uploaded/*
 data/vector_store/*
+data/source_documents/*
 *.code-workspace
 *.DS_STORE
