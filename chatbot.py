@@ -33,7 +33,7 @@ class StreamHandler(BaseCallbackHandler):
 
 class DocChatbot:
     llm: ChatOpenAI
-    condens_question_llm: ChatOpenAI
+    condense_question_llm: ChatOpenAI
     embeddings: OpenAIEmbeddings
     vector_db: FAISS
     chatchain: BaseConversationalRetrievalChain
@@ -78,7 +78,7 @@ class DocChatbot:
 
             embedding_deployment = os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME")
 
-        self.condens_question_llm = self.llm
+        self.condense_question_llm = self.llm
 
         self.embeddings = OpenAIEmbeddings(
             deployment=embedding_deployment, 
@@ -101,7 +101,7 @@ class DocChatbot:
                 callbacks=[StreamHandler(answer_container)]
             ) # type: ignore
 
-            self.condens_question_llm = ChatOpenAI(
+            self.condense_question_llm = ChatOpenAI(
                 temperature=temperature,
                 openai_api_key=api_key,
                 request_timeout=request_timeout,
@@ -124,7 +124,7 @@ class DocChatbot:
                 callbacks=[StreamHandler(answer_container)]
             ) # type: ignore
 
-            self.condens_question_llm = AzureChatOpenAI(
+            self.condense_question_llm = AzureChatOpenAI(
                 deployment_name=os.getenv("OPENAI_GPT_DEPLOYMENT_NAME"),
                 temperature=temperature,
                 openai_api_version="2023-05-15",
@@ -154,7 +154,7 @@ class DocChatbot:
         self.chatchain = ConversationalRetrievalChain.from_llm(llm=self.llm, 
                                                 retriever=self.vector_db.as_retriever(),
                                                 condense_question_prompt=CONDENSE_QUESTION_PROMPT,
-                                                condense_question_llm=self.condens_question_llm,
+                                                condense_question_llm=self.condense_question_llm,
                                                 chain_type=chain_type,
                                                 return_source_documents=True,
                                                 verbose=False)
