@@ -12,7 +12,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.conversational_retrieval.base import BaseConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 
-from langchain.document_loaders import (UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, PyPDFLoader, UnstructuredFileLoader, CSVLoader)
+from langchain.document_loaders import (UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, PyPDFLoader, UnstructuredFileLoader, CSVLoader, MWDumpLoader)
 import langchain.text_splitter as text_splitter
 from langchain.text_splitter import (RecursiveCharacterTextSplitter, CharacterTextSplitter)
 
@@ -230,6 +230,8 @@ class DocChatbot:
                 loader = PyPDFLoader(file)
             elif ext_name == ".csv":
                 loader = CSVLoader(file_path=file)
+            elif ext_name == ".xml":
+                loader = MWDumpLoader(file_path=file, encoding="utf8")
             else:
                 # process .txt, .html
                 loader = UnstructuredFileLoader(file)
