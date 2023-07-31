@@ -211,7 +211,9 @@ class DocChatbot:
 
     # split documents, generate embeddings and ingest to vector db
     def init_vector_db_from_documents(self, file_list: List[str]):
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        chunk_size = int(os.getenv("CHUNK_SIZE"))
+        chunk_overlap = int(os.getenv("CHUNK_OVERLAP"))
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
         docs = []
         for file in file_list:
