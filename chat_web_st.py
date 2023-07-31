@@ -18,7 +18,7 @@ with st.sidebar:
     selected_index = st.selectbox('Select an index or upload a file:', index_options)
 
     with st.form("Upload and Process", True):
-        uploaded_file = st.file_uploader("Upload documents", type=["pdf", "md", "txt", "docx"])
+        uploaded_file = st.file_uploader("Upload documents", type=["pdf", "md", "txt", "docx", ".csv"])
         submitted = st.form_submit_button("Process")
 
         if submitted:
@@ -26,7 +26,7 @@ with st.sidebar:
                 if selected_index == "Uploaded File":
                     if uploaded_file:
                         ext_name = os.path.splitext(uploaded_file.name)[-1]
-                        if ext_name not in [".pdf", ".md", ".txt", ".docx"]:
+                        if ext_name not in [".pdf", ".md", ".txt", ".docx", ".csv"]:
                             st.error("Unsupported file type.")
                             st.stop()
                         # Save the uploaded file to local
