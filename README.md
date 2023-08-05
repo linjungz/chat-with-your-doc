@@ -64,10 +64,25 @@ pip install -r requirements.txt
 
 ## Configuration
 
+> In this project we're supporting both API from OpenAI and Azure OpenAI Service. There're some environmnet variables that are common for the two APIs while some are unique. The following table lists all the env vars that're supported:
+
+| Environment Variables | Azure OpenAI Service | OpenAI |
+| --- | --- | --- |
+| OPENAI_API_BASE | :white_check_mark: | |
+| OPENAI_API_KEY  | :white_check_mark: | :white_check_mark: |
+| OPENAI_GPT_DEPLOYMENT_NAME | :white_check_mark: | |
+| OPENAI_EMBEDDING_DEPLOYMENT_NAME | :white_check_mark: | :white_check_mark: |
+| CHAT_MODEL_NAME | | :white_check_mark: |
+| REQUEST_TIMEOUT | :white_check_mark: | :white_check_mark: |
+| VECTORDB_PATH | :white_check_mark: | :white_check_mark: |
+| TEMPERATURE | :white_check_mark: | :white_check_mark: |
+| CHUNK_SIZE | :white_check_mark: | :white_check_mark: |
+| CHUNK_OVERLAP | :white_check_mark: | :white_check_mark: |
+
+
 ### Azure OpenAI Services
 
 1. Obtain your Azure OpenAI API key, Endpoint and Deployment Name from the [Azure Portal](https://portal.azure.com/).
-
 2. Create `.env` in the root dir and set the environment variables in the file:
 
 ```
@@ -82,11 +97,11 @@ Here's where you can find the deployment names for GPT and Embedding:
 ### OpenAI
 
 1. Obtain your OpenAI API key from the [platform.openai.com](https://platform.openai.com/account/api-keys).
-
 2. Create `.env` in the root dir and set the environment variable in the file:
 
 ```
 OPENAI_API_KEY=your-key-here
+CHAT_MODEL_NAME="gpt-4-0314"
 ```
 
 ## Usage: Web
