@@ -2,3 +2,8 @@
 .env
 __pycache__/*
 data/uploaded/*
+data/vector_store/*
+data/source_documents/*
+data/archive/*
+*.code-workspace
+*.DS_STORE

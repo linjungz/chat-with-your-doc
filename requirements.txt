@@ -7,7 +7,7 @@ argilla==1.7.0
 async-timeout==4.0.2
 attrs==23.1.0
 backoff==2.2.1
-backports.zoneinfo==0.2.1
+backports.zoneinfo==0.2.1;python_version<"3.9"
 blinker==1.6.2
 cachetools==5.3.1
 certifi==2023.5.7
@@ -132,3 +132,12 @@ xlrd==2.0.1
 XlsxWriter==3.1.0
 yarl==1.9.2
 zipp==3.15.0
+
+# For MediaWiki Dump support
+# mediawiki-utilities supports XML schema 0.11 in unmerged branches
+#pip install -qU git+https://github.com/mediawiki-utilities/python-mwtypes@updates_schema_0.11
+# mediawiki-utilities mwxml has a bug, fix PR pending
+#pip install -qU git+https://github.com/gdedrouas/python-mwxml@xml_format_0.11
+mwxml
+mediawiki-utilities
+mwparserfromhell

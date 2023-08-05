@@ -4,31 +4,50 @@ import os
 import streamlit as st
 from datetime import datetime
 
+docChatBot = DocChatbot()
+available_indexes = docChatBot.get_available_indexes("./data/vector_store")
+
+# Add an option for "Uploaded File"
+index_options = ["Uploaded File"] + available_indexes
+
 with st.sidebar:
     st.title("💬 Chat with Your Doc")
     st.write("Upload a document and ask questions about it.")
+
+    # Dropdown for selecting an index or uploaded file
+    selected_index = st.selectbox('Select an index or upload a file:', index_options)
+
     with st.form("Upload and Process", True):
-        uploaded_file = st.file_uploader("Upload documents", type=["pdf", "md", "txt", "docx"])
+        uploaded_file = st.file_uploader("Upload documents", type=["pdf", "md", "txt", "docx", ".csv", ".xml"])
         submitted = st.form_submit_button("Process")
 
-        if uploaded_file:
-            # Save the uploaded file to local
-            ext_name = os.path.splitext(uploaded_file.name)[-1]
-            timestamp = int(datetime.timestamp(datetime.now()))
-            local_file_name = f"""./data/uploaded/{timestamp}{ext_name}"""
-            with open(local_file_name, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-                f.close()
+        if submitted:
+            try:
+                if selected_index == "Uploaded File":
+                    if uploaded_file:
+                        ext_name = os.path.splitext(uploaded_file.name)[-1]
+                        if ext_name not in [".pdf", ".md", ".txt", ".docx", ".csv", ".xml"]:
+                            st.error("Unsupported file type.")
+                            st.stop()
+                        # Save the uploaded file to local
+                        timestamp = int(datetime.timestamp(datetime.now()))
+                        local_file_name = f"""./data/uploaded/{timestamp}{ext_name}"""
+                        with open(local_file_name, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                            f.close()
 
-            if submitted:
-                with st.spinner("Initializing vector db..."):
-                    docChatBot = DocChatbot()
-                    docChatBot.init_vector_db_from_documents([local_file_name])
-                    st.session_state['docChatBot'] = docChatBot
-                    st.session_state["messages"] = [{"role": "assistant", "content": "Hi!😊"}]
+                        docChatBot.init_vector_db_from_documents([local_file_name])
+                else:
+                    docChatBot.load_vector_db_from_local("./data/vector_store", selected_index)
+
+                st.session_state['docChatBot'] = docChatBot
+                st.session_state["messages"] = [{"role": "assistant", "content": "Hi!😊"}]
 
                 st.success("Vector db initialized.")
                 st.balloons()
+            except Exception as e:
+                st.error(f"An error occurred while processing the file: {str(e)}")
+                st.stop()
                 
     with st.container():
         "[Github Repo Link](https://github.com/linjungz/chat-with-your-doc)"
