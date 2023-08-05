@@ -8,22 +8,22 @@ docChatBot = DocChatbot()
 available_indexes = docChatBot.get_available_indexes("./data/vector_store")
 
 # Add an option for "Uploaded File"
-index_options = ["Uploaded File"] + available_indexes
+index_options = ["-- Existing Vector Stores --"] + available_indexes
 
 with st.sidebar:
     st.title("💬 Chat with Your Doc")
     st.write("Upload a document and ask questions about it.")
 
-    # Dropdown for selecting an index or uploaded file
-    selected_index = st.selectbox('Select an index or upload a file:', index_options)
-
     with st.form("Upload and Process", True):
+        # Dropdown for selecting an index or uploaded file
+        selected_index = st.selectbox('Select an existing vector store or upload a file to create one, then press Process button', index_options)
+
         uploaded_file = st.file_uploader("Upload documents", type=["pdf", "md", "txt", "docx", ".csv", ".xml"])
         submitted = st.form_submit_button("Process")
 
         if submitted:
             try:
-                if selected_index == "Uploaded File":
+                if selected_index == "-- Existing Vector Stores --":
                     if uploaded_file:
                         ext_name = os.path.splitext(uploaded_file.name)[-1]
                         if ext_name not in [".pdf", ".md", ".txt", ".docx", ".csv", ".xml"]:

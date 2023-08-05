@@ -12,8 +12,8 @@ load_dotenv()
 VECTORDB_PATH = os.getenv("VECTORDB_PATH")
 
 if VECTORDB_PATH is None:
-    typer.echo(typer.style("VECTORDB_PATH environment variable not found.", fg=typer.colors.RED))
-    raise typer.Exit()
+    typer.echo(typer.style("VECTORDB_PATH environment variable not found and default path ./data/vector_store will be used.", fg=typer.colors.RED))
+    VECTORDB_PATH = "./data/vector_store"
 
 @app.command()
 def ingest(
